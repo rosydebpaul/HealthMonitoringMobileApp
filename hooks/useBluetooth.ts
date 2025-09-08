@@ -45,31 +45,50 @@ export function useBluetooth() {
 
   // Initialize BLE Manager
   useEffect(() => {
+    // Check if we have a valid user before initializing Bluetooth
+    if (!user) {
+      setState(prev => ({ 
+        ...prev, 
+        bluetoothState: 'NotSupported',
+        error: 'Please log in to use Bluetooth features.'
+      }));
+      return;
+    }
+
     // Only initialize BLE Manager on native platforms
     if (Platform.OS !== 'web') {
-      bleManagerRef.current = new BleManager();
-      
-      const manager = bleManagerRef.current;
-
-      // Monitor Bluetooth state
-      const subscription = manager.onStateChange((state) => {
-        setState(prev => ({ ...prev, bluetoothState: state }));
+      try {
+        bleManagerRef.current = new BleManager();
         
-        if (state === 'PoweredOff') {
-          setState(prev => ({ 
-            ...prev, 
-            error: 'Bluetooth is turned off. Please enable Bluetooth to connect to devices.',
-            isScanning: false,
-            discoveredDevices: [],
-            connectedDevice: null,
-          }));
-        }
-      }, true);
+        const manager = bleManagerRef.current;
 
-      return () => {
-        subscription.remove();
-        manager.destroy();
-      };
+        // Monitor Bluetooth state
+        const subscription = manager.onStateChange((state) => {
+          setState(prev => ({ ...prev, bluetoothState: state }));
+          
+          if (state === 'PoweredOff') {
+            setState(prev => ({ 
+              ...prev, 
+              error: 'Bluetooth is turned off. Please enable Bluetooth to connect to devices.',
+              isScanning: false,
+              discoveredDevices: [],
+              connectedDevice: null,
+            }));
+          }
+        }, true);
+
+        return () => {
+          subscription.remove();
+          manager.destroy();
+        };
+      } catch (error) {
+        console.error('Error initializing BLE Manager:', error);
+        setState(prev => ({ 
+          ...prev, 
+          bluetoothState: 'NotSupported',
+          error: 'Failed to initialize Bluetooth. This feature may not be available on this device.'
+        }));
+      }
     } else {
       // Set web-specific state
       setState(prev => ({ 
@@ -78,7 +97,7 @@ export function useBluetooth() {
         error: 'Bluetooth functionality is not available on web. Please use the mobile app for device connectivity.'
       }));
     }
-  }, []);
+  }, [user]);
 
   // Request Android permissions
   const requestAndroidPermissions = async (): Promise<boolean> => {

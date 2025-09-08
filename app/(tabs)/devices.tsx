@@ -10,6 +10,19 @@ import { useAuth } from '@/contexts/AuthContext';
 export default function DevicesScreen() {
   const { user } = useAuth();
   const { addHealthMetric } = useHealthData();
+
+  // Early return if no user
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Connected Devices</Text>
+          <Text style={styles.subtitle}>Please log in to manage your devices</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   const {
     isScanning,
     discoveredDevices,
