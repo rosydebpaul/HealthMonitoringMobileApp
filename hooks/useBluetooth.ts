@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Platform, PermissionsAndroid } from 'react-native';
 import { BleManager, Device, Characteristic } from 'react-native-ble-plx';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface BluetoothDevice {
   id: string;
@@ -34,6 +35,7 @@ const BATTERY_LEVEL_CHARACTERISTIC_UUID = '00002A19-0000-1000-8000-00805F9B34FB'
 
 export function useBluetooth() {
   const bleManagerRef = useRef<BleManager | null>(null);
+  const { user } = useAuth();
   const [state, setState] = useState<BluetoothState>({
     isScanning: false,
     discoveredDevices: [],
